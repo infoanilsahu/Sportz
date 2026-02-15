@@ -1,7 +1,6 @@
 import express from 'express';
 import 'dotenv/config';
-import { db } from './db.js';
-import { matches } from './db/schema.js';
+import { db } from './db/db.js';
 
 const app = express();
 app.use(express.json());
