@@ -51,18 +51,18 @@ export const createMatchSchema = z
   .superRefine((data, ctx) => {
     try {
       const s = new Date(data.startTime);
-      const e = new Date(data.endTime);
-      if (isNaN(s.getTime()) || isNaN(e.getTime())) {
+      const end = new Date(data.endTime);
+      if (Number.isNaN(s.getTime()) || Number.isNaN(end.getTime())) {
         return;
       }
-      if (e.getTime() <= s.getTime()) {
+      if (end.getTime() <= s.getTime()) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: 'endTime must be after startTime',
           path: ['endTime'],
         });
       }
-    } catch (e) {
+    } catch {
       // ignore parse errors; refinements above will report invalid ISO
     }
   });
