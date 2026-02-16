@@ -10,12 +10,12 @@ export const matchRouter = Router();
 const MAX_LIMIT = 100;
 
 matchRouter.get("/", async (req,res) => {
-    const paesed = listMatchesQuerySchema.safeParse(req.query)
-    if ( !paesed.success ) {
-        return res.status(400).json({ error: 'Invail query ', details: paesed.error.issues})
+    const parsed = listMatchesQuerySchema.safeParse(req.query)
+    if ( !parsed.success ) {
+        return res.status(400).json({ error: 'Invail query. ', details: parsed.error.issues})
     }
 
-    const limit = Math.min(paesed.data.limit ?? 50, MAX_LIMIT);
+    const limit = Math.min(parsed.data.limit ?? 50, MAX_LIMIT);
 
     try {
         const data = await db.select()
@@ -50,7 +50,8 @@ matchRouter.post("/", async (req,res) => {
 
         return res.status(200).json({ data: event})
     } catch (err) {
-        res.status(500).json({ error: 'Failed to create match.', details: JSON.stringify(err)})
+        console.error('Failed to create match.', err)
+        return res.status(500).json({ error: 'Failed to create match.', details: JSON.stringify(err)})
     }
 })
 
