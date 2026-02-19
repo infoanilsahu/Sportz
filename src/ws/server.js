@@ -3,15 +3,19 @@ import { WebSocket, WebSocketServer } from "ws";
 function SendJson(socket, payload) {
     if(socket.readyState !== WebSocket.OPEN) return;
 
-    socket.send(JSON.stringify(payload));
+    try {
+        socket.send(JSON.stringify(payload), (err) => {
+            if(err) console.error("ws send failed", err)
+        });
+    } catch (error) {
+        console.error("ws send failed", error)
+    }
 }
 
 
 function broadCastToAll(wss, payload) {
     for (const client of wss.clients) {
-        if (client.readyState !== WebSocket.OPEN) continue;
-
-        client.send(JSON.stringify(payload))
+        SendJson(client, payload)
     }
 }
 
