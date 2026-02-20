@@ -10,8 +10,15 @@ const server = http.createServer(app);
 
 app.use(express.json());
 
+app.use(securityMiddleware());
+
+app.get("/", (req, res) => {
+  res.send("Hello Express ")
+})
+
 import { matchRouter } from "./router/route.js";
 import { attachWebSocket } from './ws/server.js';
+import { securityMiddleware } from './arcjet.js';
 
 app.use("/matches", matchRouter)
 
