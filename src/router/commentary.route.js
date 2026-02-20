@@ -16,7 +16,7 @@ commentaryRouter.get("/", async (req, res) => {
     }
 
     const queryResult = limitCommentaryQuerySchema.safeParse(req.query);
-    if (!queryResult) {
+    if (!queryResult.success) {
         return res.status(400).json({ error: "Invalid query parameters.", details: queryResult.error.issues })
     }
 
