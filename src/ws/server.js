@@ -1,9 +1,38 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { wsArcjet } from "../arcjet.js";
 
+const matchSubscribers = new Map();
+
+function subscribe(matchId, socket) {
+    if (!matchSubscribers.has(matchId)) {
+        matchSubscribers.set(matchId, new Set())
+    }
+
+    matchSubscribers.get(matchId).add(socket);
+}
+
+function unsubscribe(matchId, socket) {
+    const subscribes = matchSubscribers.get(matchId)
+
+    if(!subscribes) return;
+
+    subscribes.delete(socket)
+
+    if (subscribes.size === 0) {
+        matchSubscribers.delete(matchId)
+    }
+}
+
+function cleanupSubscriptions(socket) {
+    for (const matchId of socket.subscriptions) {
+        unsubscribe(matchId, socket)
+    }
+}
+
+
 function SendJson(socket, payload) {
     if(socket.readyState !== WebSocket.OPEN) return;
-
+    
     try {
         socket.send(JSON.stringify(payload), (err) => {
             if(err) console.error("ws send failed", err)
@@ -20,6 +49,46 @@ function broadCastToAll(wss, payload) {
     }
 }
 
+function broadCastToMatch(matchId, payload) {
+    const subscribes = matchSubscribers.get(matchId);
+
+    if(!subscribes || subscribes.size === 0) return;
+
+    const message = JSON.stringify(payload)
+
+    for (const client of subscribes) {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(message);
+        }
+    }
+}
+
+function handleMessage(socket, data) {
+    let message;
+
+    try {
+        message = JSON.parse(data.toString())
+    } catch (err) {
+        SendJson(socket, { type: "error", message: "Invalid JSON" })
+        return ;
+    }
+
+    const matchId = Number(message.matchId);
+
+    if (message?.type === "subscribe" && Number.isInteger(matchId)) {
+        subscribe(matchId, socket);
+        socket.subscriptions.add(matchId);
+        SendJson(socket, { type: "subscribed", matchId: matchId })
+        return;
+    }
+    
+    if (message?.type === "unsubscribe" && Number.isInteger(matchId)) {
+        unsubscribe(matchId, socket)
+        socket.subscriptions.delete(matchId)
+        SendJson(socket, { type: "unsubscribed", matchId: matchId })
+        return
+    }
+}
 
 export function attachWebSocket(server) {
     const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 1024*1024 })
@@ -46,11 +115,26 @@ export function attachWebSocket(server) {
         }
 
 
+        
+        
         socket.isAlive = true;
         socket.on("pong", () => { socket.isAlive = true })
-
+        
+        socket.subscriptions = new Set();
 
         SendJson(socket, { type: "welcome" });
+
+        socket.on("message", (data) => {
+            handleMessage(socket, data)
+        })
+
+        socket.on("error", () => {
+            socket.terminate()
+        })
+
+        socket.on("close", () => {
+            cleanupSubscriptions(socket)
+        })
 
         socket.on("error", console.error)
     });
@@ -70,7 +154,11 @@ export function attachWebSocket(server) {
         broadCastToAll(wss,{ type: 'match_created', data: match})
     }
 
-    return { broadCastMatchCreated }
+    function broadCastCommentary(matchId, comment) {
+        broadCastToMatch(matchId, { type: "commentary", data: comment})
+    }
+
+    return { broadCastMatchCreated, broadCastCommentary }
 }
 
 

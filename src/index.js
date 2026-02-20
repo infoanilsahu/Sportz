@@ -24,8 +24,10 @@ import { securityMiddleware } from './arcjet.js';
 app.use("/matches", matchRouter)
 app.use("/matches/:id/commentary", commentaryRouter)
 
-const { broadCastMatchCreated } = attachWebSocket(server)
+const { broadCastMatchCreated, broadCastCommentary } = attachWebSocket(server)
 app.locals.broadCastMatchCreated = broadCastMatchCreated
+app.locals.broadCastCommentary = broadCastCommentary
+
 
 server.listen(PORT, HOST, () => {
   const baseUrl = HOST === '0.0.0.0' ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`

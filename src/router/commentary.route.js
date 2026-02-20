@@ -53,10 +53,18 @@ commentaryRouter.post("/", async (req, res) => {
     try {
         const { minutes, ...rest} = bodyResult.data;
         const [result] = await db.insert(commentary).values({
-            matchId: paramsResult.data.id,
-            minutes: minutes,
+            matchId: Number(paramsResult.data.id),
+            minute: minutes,
             ...rest
         }).returning();
+
+        if (res.app.locals.broadCastCommentary) {
+            try {
+                res.app.locals.broadCastCommentary(result.matchId, result);
+            } catch (err) {
+                console.log('Failed to broadcast commentary', err);
+            }
+        }
 
         return res.status(200).json({ data: result })
     } catch (err) {
