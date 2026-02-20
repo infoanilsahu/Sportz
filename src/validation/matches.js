@@ -27,7 +27,6 @@ export const matchIdParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
-const isoDateString = z.string().refine((val) => !isNaN(Date.parse(val)), {message: "In"})
 
 // createMatchSchema
 export const createMatchSchema = z

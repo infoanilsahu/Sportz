@@ -16,11 +16,13 @@ app.get("/", (req, res) => {
   res.send("Hello Express")
 })
 
-import { matchRouter } from "./router/route.js";
+import { matchRouter } from "./router/match.route.js";
+import { commentaryRouter } from "./router/commentary.route.js";
 import { attachWebSocket } from './ws/server.js';
 import { securityMiddleware } from './arcjet.js';
 
 app.use("/matches", matchRouter)
+app.use("/matches/:id/commentary", commentaryRouter)
 
 const { broadCastMatchCreated } = attachWebSocket(server)
 app.locals.broadCastMatchCreated = broadCastMatchCreated
