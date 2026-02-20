@@ -32,9 +32,9 @@ export function attachWebSocket(server) {
 
                 if (decision.isDenied()) {
                     const code = decision.reason.isRateLimit() ? 1013 : 1008;
-                    const reson = decision.reason.isRateLimit() ? "Rate limit exceeded" : "Access denied";
+                    const reason = decision.reason.isRateLimit() ? "Rate limit exceeded" : "Access denied";
 
-                    socket.close(code,reson)
+                    socket.close(code, reason)
                     return;
                 }
                 
