@@ -82,11 +82,9 @@ function handleMessage(socket, data) {
     const matchId = Number(message.matchId);
 
     if (message?.type === "subscribe" && Number.isInteger(matchId)) {
-        if (!socket.subscribes.has(matchId)) {
             subscribe(matchId, socket);
             socket.subscriptions.add(matchId);
             
-        }
         SendJson(socket, { type: "subscribed", matchId: matchId })
         return;
     }
